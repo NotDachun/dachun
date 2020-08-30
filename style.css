@@ -1,0 +1,39 @@
+.home-content {
+    padding-top: 50px;
+}
+#profile {
+    margin-bottom: 20px;
+}
+
+#profile h3 {
+    font-size: 18px;
+    font-weight: 300;
+    color: gray;
+}
+
+#profile h1 {
+    font-weight: 300;
+}
+
+.image-cropper {
+    width: 300px;
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 40%;
+    border: 2px solid grey;
+    margin-bottom: 20px;
+}
+
+.profile-pic {
+    display: inline;
+    margin: 0 auto;
+    margin-left: -33%;
+    margin-bottom: -25%;
+    height: 100%;
+    width: auto;
+}
+
+.big-icon {
+    font-size: 2rem;
+}
