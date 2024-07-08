@@ -16,11 +16,11 @@
 }
 
 .image-cropper {
-    width: 300px;
-    height: 300px;
+    width: 84%;
+    height: 25%;
     position: relative;
     overflow: hidden;
-    border-radius: 40%;
+    border-radius: 20%;
     border: 2px solid grey;
     margin-bottom: 20px;
 }
@@ -28,12 +28,32 @@
 .profile-pic {
     display: inline;
     margin: 0 auto;
-    margin-left: -33%;
-    margin-bottom: -25%;
     height: 100%;
     width: auto;
 }
 
 .big-icon {
     font-size: 2rem;
+    margin-right: 8px;
+}
+
+.timeline {
+    list-style: none;
+    padding-left: 0;
+}
+.timeline-item {
+    margin-bottom: 10px;
+}
+.timeline-item .date {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.links a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: blue;
+}
+.links a:hover {
+    text-decoration: underline;
 }
