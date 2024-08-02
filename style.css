@@ -1,6 +1,7 @@
 .home-content {
     padding-top: 50px;
 }
+
 #profile {
     margin-bottom: 20px;
 }
@@ -37,18 +38,6 @@
 .big-icon {
     font-size: 2rem;
     margin-right: 8px;
-}
-
-.timeline {
-    list-style: none;
-    padding-left: 0;
-}
-.timeline-item {
-    margin-bottom: 10px;
-}
-.timeline-item .date {
-    font-weight: bold;
-    margin-right: 10px;
 }
 
 .links a {
