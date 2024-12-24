@@ -9,6 +9,7 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--background-color);
+    padding-top: 2rem; /* Added padding to top of body */
 }
 
 .home-content {
