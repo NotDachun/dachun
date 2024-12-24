@@ -92,6 +92,16 @@ body {
     vertical-align: top;
 }
 
+.journal-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.journal-section ul a {
+    color: black;
+    text-decoration: underline;
+}
+
 @media (max-width: 991px) {
     .image-cropper {
         width: 150px;
