@@ -78,19 +78,22 @@ body {
     margin-bottom: 0.5rem; 
 }
 
-.publications-table {
+.publications-table, .journal-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 0.5rem;
+    border-spacing: 0 0.5rem; /* Consistent spacing between rows */
 }
 
-.publication-date {
-    width: 75px;
+.publication-date, .journal-date {
+    width: 100px; /* Ensure both have the same width */
     vertical-align: top;
+    padding-right: 10px; /* Consistent space between date and content */
+    color: var(--text-color); /* Use a color that matches your theme */
 }
 
-.publication-content {
+.publication-content, .journal-table td {
     vertical-align: top;
+    padding-left: 0; /* Ensure no extra padding is added */
 }
 
 .journal-section h3 {
@@ -99,6 +102,11 @@ body {
 }
 
 .journal-section ul a {
+    color: black;
+    text-decoration: underline;
+}
+
+.journal-table a {
     color: black;
     text-decoration: underline;
 }
