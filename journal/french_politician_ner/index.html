@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hackathon project using VectorDBs and LLMs to identify French politicians in large text datasets">
+    <title>Finding French Politicians at Scale</title>
+    <link rel="stylesheet" href="../journal.css">
+</head>
+<body>
+    <main class="journal-entry">
+        <a href="../../index.html" class="back-link">
+            ← Back
+        </a>
+
+        <article>
+            <header class="journal-header">
+                <h1 class="journal-title">Mistral AI Hackathon: Finding French Politicians at Scale</h1>
+                <div class="journal-metadata">
+                    <time datetime="2024-03-24">March 24, 2024</time>
+                </div>
+            </header>
+
+            <div class="journal-content">
+                <p>This project was completed as part of the <a href="https://x.com/MistralAILabs/status/1765434559993123184" target="_blank" rel="noopener noreferrer">SF Mistral AI Hackathon 2024</a> in collaboration with my wonderful teammates <a href="https://www.linkedin.com/in/vaibhavkumar97/" target="_blank" rel="noopener noreferrer">Vaibhav Kumar</a> and <a href="https://www.linkedin.com/in/1sf/" target="_blank" rel="noopener noreferrer">Akhil Dhavala</a>.</p>
+                
+                <h2>Overview</h2>
+                <p>LLMs, like Mistral-Large, demonstrate strong out-of-the-box performance across a wide range of NLP tasks. However, leveraging LLM inference at scale remains cost constrained for web-scale datasets. We utilize Mistral-Large to generate labels for web data in the low-resource, high-cost-to-label task of fine-grained named entity recognition.</p>
+                <p>To extend this problem, we define a new fine-grained entity type, French politicians, and utilize our framework to rapidly generate synthetic data and train a downstream model. Scanning across a subset of the unlabeled dataset, <strong>we are able to identify 2174 mentions of French politicians compared to just 7 mentions in the labeled dataset.</strong></p>
+
+                <h2>Dataset</h2>
+                <p>We utilize the "Politics" domain of the CrossNER dataset, an unlabeled corpora from Wikipedia. Further narrowing down, we select the task-level corpus type. The task-level corpus is explicitly related to the NER task in the target domain. To construct this corpus, the authors selected sentences having domain-specialized entities.</p>
+                <p>For the labeled portion, we use the CoNLL2003 data. Similar to CrossNER, we keep a small size of data samples in the training set for each domain since we consider a low-resource scenario.</p>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>unlabeled</th>
+                                <th>labeled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td># paragraph</td>
+                                <td>2.76M</td>
+                                <td>200</td>
+                            </tr>
+                            <tr>
+                                <td># sentence</td>
+                                <td>9.07M</td>
+                                <td>541</td>
+                            </tr>
+                            <tr>
+                                <td># tokens</td>
+                                <td>176.5M</td>
+                                <td>651</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Entity types: politician, political party, election</p>
+
+                <h2>Fine-tuning LLMs for Political NER</h2>
+                <p>Our plan is to prompt Mistral-Large to generate additional synthetic labels and then fine-tune a Mistral-7B model on the expanded dataset for large scale inference. We use vector search and clustering to identify in-distribution unlabeled examples to maximize value for synthetic data generation.</p>
+                
+                <figure>
+                    <img src="images/workflow_diagram.png" alt="Workflow Diagram">
+                </figure>
+
+                <h3>MongoDB Atlas Vector Search</h3>
+                <p>We use Mistral-Embed to generate embeddings for 169K unlabeled sentences in the task-level corpus. Then, we initialize MongoDB Atlas to store these embeddings as documents in a collection and added a Search Index to perform VectorSearch and retrieve similar sentences using cosine similarity.</p>
+                
+                <figure>
+                    <img src="images/vector_db.png" alt="MongoDB Vector Search">
+                </figure>
+
+                <h3>Prompting Mistral-Large</h3>
+                <p>Inspired by PromptNER, we prompt Mistral-Large with the following input: </p>
+                <div class="code-block">Dfn: An entity is a person (person), organisation (organisation), politician (politician), political party (politicalparty), event (event), election (election), country (country), location (location) or other political entity (misc). Dates, times, abstract concepts, adjectives, and verbs are not entities.
+
+Example 1: Sitting as a Liberal Party of Canada Member of Parliament (MP) for Niagara Falls, she joined the Canadian Cabinet after the Liberals defeated the Progressive Conservative Party of Canada government of John Diefenbaker in the 1963 Canadian federal election.
+
+Answer:
+1. Liberal Party of Canada | True | as it is a political party (politicalparty)
+2. Parliament | True | as it is an organisation (organisation)
+3. Niagara Falls | True | as it is a location (location)
+4. Canadian Cabinet | True | as it is a political entity (misc)
+5. Liberals | True | as it is a political group by not the party name (misc)
+6. Progressive Conservative Party of Canada | True | as it is a political party (politicalparty)
+7. government | False | as it is not actually an entity in this sentence
+8. John Diefenbaker | True | as it is a politician (politician)
+9. 1963 Canadian federal election | True | as it is an election (election)
+
+Example 2: The MRE took part to the consolidation of The Olive Tree as a joint electoral list both for the
+2004 European Parliament election and the 2006 Italian general election, along with the Democrats of the Left and Democracy is Freedom - The Daisy.
+
+Answer:
+1. MRE | True | as it is a political party (politicalparty)
+2. consolidation | False | as it is an action
+3. The Olive Tree | True | as it is a group or organisation (organisation)
+4. 2004 European Parliament election | True | as it is an election (election)
+5. 2006 Italian general election | True | as it is an election (election)
+6. Democrats of the Left | True | as it is a political party (politicalparty)
+7. Democracy is Freedom - The Daisy | True | as it is an political party (politicalparty)
+
+Q. Given the paragraph below, identify a list of possible entities and for each entry explain why it either is or is not an entity.
+
+Paragraph: {text}</div>
+
+                <p>Using 2-shot prompting, Mistral-Large achieves a macro-F1 of 0.68 across politician, political party, and election entity types.</p>
+
+                <figure>
+                    <img src="images/bar_chart.png" alt="Bar chart of u">
+                </figure>
+
+                <h3>Sampling Strategies</h3>
+
+                <h4>Uniform Sample</h4>
+                <p>We use the 2-shot prompting approach to label a uniform sample of unlabeled sentences.</p>
+                
+                <h4>KNN Sample</h4>
+                <p>Since a uniform sample over a vast unlabeled dataset might yield many examples that are out-of-distribution for the test set. We find the top 5 most similar unlabeled sentences using MongoDB VectorSearch to sentences in the test set. Then, we label this dataset by 2-shot prompting Mistral-Large.</p>
+
+                <h3>Defining French Politicians and French Political Parties Entities</h3>
+                <p>Supervised-NER models tend towards the recognition of a narrow and restricted set of coarse-grained entity types, such as person, organization, location. We tackle the challenge of extending these models to fine-grained, hierarchical, and intersection entity types. This class of entities is difficult to label as it often requires knowledge external to the text. And, intersectionality makes labeled data become even more scarce.</p>
+                <p>To solve this low base rate issue, initially we sample the task-level corpus for all unlabeled sentences that contain the keywords "france" and "french". Moreover, we filter out historical mentions by looking for sentences that include a year between 2012-2024.</p>
+
+                <p>We use Mistral-Large to score this for the newly defined "french politician" and "french political party" entities.</p>
+
+                <div class="code-block">Dfn: An entity is a person (person), organisation (organisation), french politician (politician), french political party (politicalparty), event (event), election (election), 
+country (country), location (location) or other political entity (misc). Dates, times, abstract concepts, adjectives, and verbs are not entities.
+
+Example 1: In the 2014 European Parliament election in France , the National Front won the elections with 24.85 % of the vote , a swing of 18.55 % , winning 24 seats , up from 3 previously .
+
+Answer:
+1. 2014 European Parliament election | True | as it is an election (election)
+2. France | True | as it is a country (country)
+3. National Front | True | as it is a political party (frenchpoliticalparty)
+
+Example 2: The FN received 33.9 % of the votes in the 2017 French presidential election , making it the largest Eurosceptic party in France .
+
+Answer:
+1. FN | True | as it is a political party (frenchpoliticalparty)
+2. 2017 French presidential election | True | as it is an election (election)
+3. Eurosceptic party | True | as it is a political party (frenchpoliticalparty)
+4. France | True | as it is a country (country)
+
+Example 3: The 2017 French presidential election caused a radical shift in French politics , as the prevailing parties of The Republicans and Socialists failed to make it to the second round of voting , with far-right Marine Le Pen and political newcomer Emmanuel Macron instead facing each other .
+
+Answer:
+1. 2017 French presidential election | True | as it is an election (election)
+2. French politics | False | as it is an abstract concept, not a specific entity
+3. The Republicans | True | as it is a political party (frenchpoliticalparty)
+4. Socialists | True | as it is a political party (frenchpoliticalparty)
+5. far-right | False | as it is an adjective describing a political orientation, not a specific entity
+6. Marine Le Pen | True | as she is a French politician (frenchpolitician)
+7. Emmanuel Macron | True | as he is a French politician (frenchpolitician)
+8. political newcomer | False | as it is an abstract concept, not a specific entity
+
+Q. Given the paragraph below, identify a list of possible entities and for each entry explain why it either is or is not an entity.
+
+Paragraph: {text}</div>
+
+                <p>To expand this dataset further, we used KNN to get the top 5 most similar unlabeled examples to sentences with at least one French Politician or French Political Party entity. Moreover, we iterate on this dataset by sampling the unlabeled dataset for matches to all French Politician entities that appeared at least 3 in the initial scoring. Through three rounds of iterations, we expand the dataset for French politics:</p>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Dataset Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>"France" and "French" keyword search (2012 - 2024)</td>
+                                <td>656</td>
+                            </tr>
+                            <tr>
+                                <td>KNN on sentences mentioning French politics</td>
+                                <td>683</td>
+                            </tr>
+                            <tr>
+                                <td>French politician entities keyword search</td>
+                                <td>949</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td><strong>2288</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>We fine-tune a Mistral-7B model on these combined datasets. We apply this model across the unlabeled sentences to discover mentions of French Politicians and French Political Parties. Below are the top 10 mentioned French Politicians.</p>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>French Politician</th>
+                                <th>Frequency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Jacques Chirac</td>
+                                <td>132</td>
+                            </tr>
+                            <tr>
+                                <td>Nicolas Sarkozy</td>
+                                <td>92</td>
+                            </tr>
+                            <tr>
+                                <td>Charles de Gaulle</td>
+                                <td>91</td>
+                            </tr>
+                            <tr>
+                                <td>Emmanuel Macron</td>
+                                <td>68</td>
+                            </tr>
+                            <tr>
+                                <td>Marine Le Pen</td>
+                                <td>62</td>
+                            </tr>
+                            <tr>
+                                <td>Jean-Marie Le Pen</td>
+                                <td>56</td>
+                            </tr>
+                            <tr>
+                                <td>François Mitterrand</td>
+                                <td>52</td>
+                            </tr>
+                            <tr>
+                                <td>François Hollande</td>
+                                <td>48</td>
+                            </tr>
+                            <tr>
+                                <td>François Fillon</td>
+                                <td>48</td>
+                            </tr>
+                            <tr>
+                                <td>François Bayrou</td>
+                                <td>44</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <p>If you are interested in the code, checkout the Github <a href="https://github.com/NotDachun/french-politician-ner/tree/main" class="smart-chip" target="_blank" rel="noopener noreferrer">french-politician-ner</a>. Have a comment or question? Email me at <a href="mailto:dzhu319@gmail.com" class="smart-chip">dzhu319@gmail.com</a>.</p>
+        </article>
+    </main>
+</body>
+</html>
