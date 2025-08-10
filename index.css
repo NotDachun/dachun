@@ -73,6 +73,11 @@ body {
     margin-bottom: 1rem;
 }
 
+.content-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem; 
+}
+
 .publications-section h3 {
     font-size: 1.5rem;
     margin-bottom: 0.5rem; 
