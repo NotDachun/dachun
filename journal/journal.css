@@ -1,4 +1,17 @@
 /* Journal styles consistent with main site theme */
+:root {
+    --primary-color: #007bff;
+    --text-color: #333;
+    --background-color: #f8f9fa;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    padding-top: 2rem;
+}
 .journal-entry {
     max-width: 800px;
     margin: 2rem auto;
@@ -19,7 +32,7 @@
 
 .journal-title {
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 300;
     margin-bottom: 0.5rem;
     color: var(--text-color);
 }
@@ -37,7 +50,7 @@
 /* Content styles */
 .journal-content {
     line-height: 1.6;
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--text-color);
 }
 
@@ -87,14 +100,6 @@
     font-family: monospace;
 }
 
-.code-block {
-    background-color: #f1f3f5;
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1.5rem 0;
-    overflow-x: auto;
-}
-
 /* Navigation */
 .back-link {
     display: inline-flex;
@@ -107,7 +112,7 @@
 }
 
 .back-link:hover {
-    color: darken(var(--primary-color), 15%);
+    color: #0056b3; /* Slightly darker than primary for hover */
     text-decoration: none;
 }
 
@@ -263,4 +268,10 @@ a[href*="github.com"].smart-chip::before {
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.75em;
     white-space: pre-wrap;
+}
+
+/* Link styling consistent with index */
+.journal-content a {
+    color: black;
+    text-decoration: underline;
 }
